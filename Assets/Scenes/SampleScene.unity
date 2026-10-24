@@ -583,6 +583,15 @@ MonoBehaviour:
   columnPrefab: {fileID: 7306525241167666272, guid: d794b2daa7e2fa74981a31f3561d7ec9, type: 3}
   tilePrefab: {fileID: 3863584507747910124, guid: 8c1634b9664633e48992b2652b2bb802, type: 3}
   solutionList: 
+  squareColors:
+  - {r: 1, g: 0.3160377, b: 0.3160377, a: 1}
+  - {r: 1, g: 0.71160305, b: 0.3176471, a: 1}
+  - {r: 0.98825973, g: 1, b: 0.3176471, a: 1}
+  - {r: 0.4761805, g: 1, b: 0.3176471, a: 1}
+  - {r: 0, g: 1, b: 0.6998246, a: 1}
+  - {r: 0, g: 0.6556065, b: 1, a: 1}
+  - {r: 1, g: 0, b: 0.57857704, a: 1}
+  - {r: 0.5377358, g: 0, b: 0.31209752, a: 1}
 --- !u!1 &1362822981
 GameObject:
   m_ObjectHideFlags: 0
