@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,6 +8,7 @@ public class SolutionGenerator : MonoBehaviour
     public int boardSize = 5;
     public GameObject columnPrefab;
     public GameObject tilePrefab;
+    public Sprite catImage;
 
     // private List<List<bool>> solutionGrid = new List<List<bool>>();
     public List<int> solutionList = new List<int>();
@@ -15,7 +17,7 @@ public class SolutionGenerator : MonoBehaviour
 
 
     private List<bool> usedList = new List<bool>();
-    private List<List<int>> colorRegions = new List<List<int>>();
+    private List<List<int>> colorRegions = new List<List<int>>(); // aka regionIds
 
 
     private static readonly int[] dRow = {-1, 1, 0, 0};
@@ -36,13 +38,43 @@ public class SolutionGenerator : MonoBehaviour
 
     void Start()
     { 
-        CreateSolutionList();
-        colorRegions = LoadRegionIds();
-        GenerateGUI();
+        bool found = false;
+        int attempts = 0;
+
+        while (!found && attempts++ < 1000)
+        {
+            CreateSolutionList();
+
+            for (int i = 0; i < 200 && !found; i++)
+            {
+                colorRegions = LoadRegionIds();
+
+                if (CountUnique(colorRegions) == 1)
+                {
+                    found = true;
+                    Debug.Log($"Repeated {i} times");
+                }
+                else
+                {
+                    Debug.Log($"Not unique on att. {i}. Try again");
+                }
+            }
+        }
+        if (!found)
+        {
+            Debug.LogError("Failed to generate a board");
+        }
+        else
+        {
+            GenerateGUI();
+        }
+
     }
 
     private void CreateSolutionList()
     {
+        solutionList.Clear();
+        usedList.Clear();
         for (int i = 0; i < boardSize; i++)
         {
             solutionList.Add(-1);
@@ -77,7 +109,7 @@ public class SolutionGenerator : MonoBehaviour
         while (unclaimed > 0)
         {
             // pick region
-            int region = Random.Range(0, boardSize);
+            int region = UnityEngine.Random.Range(0, boardSize);
 
             List<(int row, int c)> frontier = GetColorFrontier(region, boardSize, regionId);
             // if empty, continue
@@ -86,7 +118,7 @@ public class SolutionGenerator : MonoBehaviour
                 continue;
             }
 
-            (int row, int c) chosen = frontier[Random.Range(0, frontier.Count)];
+            (int row, int c) chosen = frontier[UnityEngine.Random.Range(0, frontier.Count)];
 
             regionId[chosen.row][chosen.c] = region; 
             regionSize[region] += 1;
@@ -141,12 +173,9 @@ public class SolutionGenerator : MonoBehaviour
                 Image tile = Instantiate(tilePrefab, currentRow).GetComponent<Image>();
                 if (solutionList[i] == j)
                 {
-                    tile.color = Color.black;
+                    tile.sprite = catImage;
                 }
-                else
-                {
-                    tile.color = squareColors[colorRegions[i][j]];
-                }
+                tile.color = squareColors[colorRegions[i][j]];
             }
         }
     }
@@ -205,14 +234,12 @@ public class SolutionGenerator : MonoBehaviour
         if (regionDone[colorRegions[r][c]]) return false;
 
         if (r > 0 && solutionColInRow[r - 1] != -1 && Mathf.Abs(c - solutionColInRow[r - 1]) <= 1) return false;
-        if (r < boardSize && solutionColInRow[r + 1] != -1 && Mathf.Abs(c - solutionColInRow[r + 1]) <= 1) return false;
+        if (r < boardSize - 1 && solutionColInRow[r + 1] != -1 && Mathf.Abs(c - solutionColInRow[r + 1]) <= 1) return false;
 
         return true;
     }
     private int CountSolutions(int placedCount, int limit)
     {
-        
-
         if (placedCount == boardSize)
         {
             return 1;
@@ -224,7 +251,111 @@ public class SolutionGenerator : MonoBehaviour
 
         for (int i = 0; i < boardSize; i++)
         {
-            if regionDone
+            if (regionDone[i])
+            {
+                continue;
+            }
+            List<(int row, int col)> candidates = new List<(int row, int col)>();
+            foreach ((int row, int c) cell in regionCells[i])
+            {
+                if (IsAvailable(cell.row, cell.c))
+                {
+                    candidates.Add(cell);
+                }
+            }
+
+            if (candidates.Count == 0)
+            {
+                return 0; // no legal spot, dead end
+            }
+            if (bestRegion == -1 || candidates.Count < bestCandidates.Count)
+            {
+                bestRegion = i;
+                bestCandidates = candidates;
+            }
+        }
+        int total = 0;
+        foreach ((int row, int c) cell in bestCandidates)
+        {
+            Place(cell.row, cell.c);
+            total += CountSolutions(placedCount + 1, limit - total);
+            Remove(cell.row, cell.c);
+
+            if (total >= limit)
+            {
+                break;
+            }
+        }
+        return total;
+    }
+
+    private void Place(int r, int c)
+    {
+        rowUsed[r] = true;
+        colUsed[c] = true;
+        regionDone[colorRegions[r][c]] = true;
+        solutionColInRow[r] = c;
+    }
+
+    private void Remove(int r, int c)
+    {
+        rowUsed[r] = false;
+        colUsed[c] = false;
+        regionDone[colorRegions[r][c]] = false;
+        solutionColInRow[r] = -1;
+    }
+    private int CountUnique(List<List<int>> regionId)
+    {
+        // reset rowUsed, colUsed, regionDone to false
+        rowUsed = new bool[boardSize];
+        colUsed = new bool[boardSize];
+        regionDone = new bool[boardSize];
+        ClearBoolArray(rowUsed, 0, boardSize);
+        ClearBoolArray(colUsed, 0, boardSize);
+        ClearBoolArray(regionDone, 0, boardSize);
+
+        solutionColInRow = new int[boardSize];
+        // reset catColInRow to all -1
+        if (solutionColInRow == null)
+        {
+            for (int i = 0; i < boardSize; i++)
+            {
+                solutionColInRow[i] = -1;
+            }
+        }
+        else
+        {
+            Array.Fill(solutionColInRow, -1);
+        }
+
+        regionCells = new List<(int row, int c)>[boardSize];
+        for (int i = 0; i < boardSize; i++)
+        {
+            regionCells[i] = new List<(int row, int c)>();
+        }
+        for (int r = 0; r < boardSize; r++)
+        {
+            for (int c = 0; c < boardSize; c++)
+            {
+                regionCells[regionId[r][c]].Add((r, c));
+            }
+        }
+
+
+        return CountSolutions(0, 2);
+    }
+    private void ClearBoolArray(bool[] array, int start, int end)
+    {
+        if (array == null)
+        {
+            for (int i = start; i < end; i++)
+            {
+                array[i] = false;
+            }
+        }
+        else
+        {
+            Array.Clear(array, start, end);
         }
     }
 
