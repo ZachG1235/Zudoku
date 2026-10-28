@@ -593,6 +593,8 @@ MonoBehaviour:
   - {r: 0, g: 0.6556065, b: 1, a: 1}
   - {r: 1, g: 0, b: 0.57857704, a: 1}
   - {r: 0.5377358, g: 0, b: 0.31209752, a: 1}
+  minRegionSize: 3
+  maxRegionSize: 16
 --- !u!1 &1362822981
 GameObject:
   m_ObjectHideFlags: 0

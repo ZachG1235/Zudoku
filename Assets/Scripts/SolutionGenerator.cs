@@ -1,10 +1,12 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class SolutionGenerator : MonoBehaviour
 {
+    [Min(4)]
     public int boardSize = 5;
     public GameObject columnPrefab;
     public GameObject tilePrefab;
@@ -30,6 +32,14 @@ public class SolutionGenerator : MonoBehaviour
     bool[] regionDone;
     int[] solutionColInRow;
 
+    // lesson 4 helpers
+    public int minRegionSize = 3;
+    public int maxRegionSize = 8; // try boardSize * 2
+
+    int totalAttempts, rejectedBySize, rejectedbyUniqueness;
+    bool boardGenerationSuccess = false;
+    int[] regionSizeGlobal;
+
 
     void Awake()
     {
@@ -38,37 +48,65 @@ public class SolutionGenerator : MonoBehaviour
 
     void Start()
     { 
-        bool found = false;
-        int attempts = 0;
+        
+        StartCoroutine(GenerateTracker());
+    }
 
-        while (!found && attempts++ < 1000)
-        {
-            CreateSolutionList();
+    private IEnumerator GenerateTracker()
+    {
+        yield return StartCoroutine(GenerateRoutine(1));
 
-            for (int i = 0; i < 200 && !found; i++)
-            {
-                colorRegions = LoadRegionIds();
-
-                if (CountUnique(colorRegions) == 1)
-                {
-                    found = true;
-                    Debug.Log($"Repeated {i} times");
-                }
-                else
-                {
-                    Debug.Log($"Not unique on att. {i}. Try again");
-                }
-            }
-        }
-        if (!found)
+        if (!boardGenerationSuccess)
         {
             Debug.LogError("Failed to generate a board");
+            // TODO: fallback on pre-made board? use different seed?
         }
         else
         {
             GenerateGUI();
         }
+    }
 
+    private IEnumerator GenerateRoutine(int seed)
+    {
+        bool found = false;
+        int attempts = 0;
+        totalAttempts = 0;
+        rejectedBySize = 0;
+        rejectedbyUniqueness = 0;
+
+        while (!found && attempts++ < 1000)
+        {
+            CreateSolutionList();
+            if (attempts % 10 == 0)
+            {
+                yield return null;
+            }
+
+            for (int i = 0; i < 200 && !found; i++)
+            {
+                colorRegions = LoadRegionIds();
+
+                if (!PassesQuickChecks())
+                {
+                    rejectedBySize++;
+                    continue;
+                }
+
+                if (CountUnique(colorRegions) == 1)
+                {
+                    found = true;
+                    boardGenerationSuccess = true;
+                    // Debug.Log($"Repeated {i} times");
+                }
+                else
+                {
+                    rejectedbyUniqueness++;
+                }
+                totalAttempts++;
+            }
+        }
+        Debug.Log($"Total Attempts: {totalAttempts}, Rejected by Size: {rejectedBySize}, Rejected by Uniq. {rejectedbyUniqueness}");
     }
 
     private void CreateSolutionList()
@@ -123,6 +161,13 @@ public class SolutionGenerator : MonoBehaviour
             regionId[chosen.row][chosen.c] = region; 
             regionSize[region] += 1;
             unclaimed -= 1; 
+        }
+
+
+        regionSizeGlobal = new int[boardSize];
+        for (int i = 0; i < boardSize; i++)
+        {
+            regionSizeGlobal[i] = regionSize[i];
         }
 
         return regionId;
@@ -340,6 +385,7 @@ public class SolutionGenerator : MonoBehaviour
                 regionCells[regionId[r][c]].Add((r, c));
             }
         }
+        
 
 
         return CountSolutions(0, 2);
@@ -357,6 +403,22 @@ public class SolutionGenerator : MonoBehaviour
         {
             Array.Clear(array, start, end);
         }
+    }
+
+    private bool PassesQuickChecks()
+    {
+        foreach (int size in regionSizeGlobal)
+        {
+            if (size < minRegionSize)
+            {
+                return false;
+            }
+            if (size > maxRegionSize)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     
