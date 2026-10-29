@@ -579,7 +579,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 511e2ead45141a24e97658934fc8eae1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SolutionGenerator
-  boardSize: 8
+  boardSize: 5
   columnPrefab: {fileID: 7306525241167666272, guid: d794b2daa7e2fa74981a31f3561d7ec9, type: 3}
   tilePrefab: {fileID: 3863584507747910124, guid: 8c1634b9664633e48992b2652b2bb802, type: 3}
   catImage: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
@@ -593,8 +593,8 @@ MonoBehaviour:
   - {r: 0, g: 0.6556065, b: 1, a: 1}
   - {r: 1, g: 0, b: 0.57857704, a: 1}
   - {r: 0.5377358, g: 0, b: 0.31209752, a: 1}
-  minRegionSize: 3
-  maxRegionSize: 16
+  minRegionSize: 2
+  maxRegionSize: 10
 --- !u!1 &1362822981
 GameObject:
   m_ObjectHideFlags: 0
@@ -652,7 +652,7 @@ MonoBehaviour:
   m_Spacing: 10
   m_ChildForceExpandWidth: 0
   m_ChildForceExpandHeight: 0
-  m_ChildControlWidth: 0
+  m_ChildControlWidth: 1
   m_ChildControlHeight: 0
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0

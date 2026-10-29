@@ -86,6 +86,7 @@ public class SolutionGenerator : MonoBehaviour
             for (int i = 0; i < 200 && !found; i++)
             {
                 colorRegions = LoadRegionIds();
+                totalAttempts++;
 
                 if (!PassesQuickChecks())
                 {
@@ -103,7 +104,6 @@ public class SolutionGenerator : MonoBehaviour
                 {
                     rejectedbyUniqueness++;
                 }
-                totalAttempts++;
             }
         }
         Debug.Log($"Total Attempts: {totalAttempts}, Rejected by Size: {rejectedBySize}, Rejected by Uniq. {rejectedbyUniqueness}");
@@ -215,14 +215,40 @@ public class SolutionGenerator : MonoBehaviour
             Transform currentRow = Instantiate(columnPrefab, rowManager).transform;
             for (int j = 0; j < boardSize; j++)
             {
-                Image tile = Instantiate(tilePrefab, currentRow).GetComponent<Image>();
-                if (solutionList[i] == j)
-                {
-                    tile.sprite = catImage;
-                }
-                tile.color = squareColors[colorRegions[i][j]];
+                GameObject tile = Instantiate(tilePrefab, currentRow);
+                Image tileImage = tile.GetComponent<Image>();
+                tileImage.color = squareColors[colorRegions[i][j]];
+
+                TileInput input = tile.GetComponent<TileInput>();
+                input.Init(i, j, solutionList[i] == j);
+                input.Clicked += OnTileClicked;
+                input.DoubleClicked += OnTileDoubleClicked;
+                input.DragStarted += OnTileDragEntered;
+                input.DragEntered += OnTileDragEntered;
+
             }
         }
+    }
+
+    private void OnTileClicked(TileInput tile)
+    {
+        Debug.Log($"Clicked {tile.Row}, {tile.Col}");
+        // cycle empty -> mark
+        tile.ToggleCross();
+    }
+
+    private void OnTileDoubleClicked(TileInput tile)
+    {
+        Debug.Log($"Double-clicked {tile.Row}, {tile.Col}");
+        // TODO: place cat
+        tile.SetDisplayFlag();
+    }
+
+    private void OnTileDragEntered(TileInput tile)
+    {
+        Debug.Log($"Drag over {tile.Row}, {tile.Col}");
+        // TODO: mark this tile
+        tile.ToggleCross();
     }
 
     private bool PlaceRow(int row)
