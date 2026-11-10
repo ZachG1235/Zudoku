@@ -1,11 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class SolutionGenerator : MonoBehaviour
 {
+    public static SolutionGenerator Main {get; private set;}
     [Header("Board Size")]
     [Min(4)]
     public int boardSize = 5;
@@ -27,13 +29,27 @@ public class SolutionGenerator : MonoBehaviour
     public List<int> solutionList = new List<int>();
     public List<Color> squareColors = new List<Color>();
 
+    [HideInInspector] public List<List<TileInput>> tileReferences = new List<List<TileInput>>();
+
     private List<List<int>> colorRegions = new List<List<int>>(); 
     private bool generating;
-
+    public enum DragStatus
+    {
+        NotDragging = -1,
+        DragCross,
+        DragErase
+    }
+    private DragStatus dragStatus = DragStatus.NotDragging;
 
     void Awake()
     {
-        // TODO: make this a singleton
+        if (Main != null && Main != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Main = this;
     }
 
     void Start()
@@ -103,6 +119,7 @@ public class SolutionGenerator : MonoBehaviour
         Transform rowManager = transform.GetChild(0);
         for (int i = 0; i < boardSize; i++)
         {
+            var tileRowList = new List<TileInput>();
             Transform currentRow = Instantiate(columnPrefab, rowManager).transform;
             for (int j = 0; j < boardSize; j++)
             {
@@ -116,29 +133,64 @@ public class SolutionGenerator : MonoBehaviour
                 input.DoubleClicked += OnTileDoubleClicked;
                 input.DragStarted += OnTileDragEntered;
                 input.DragEntered += OnTileDragEntered;
-
+                input.DragEnded += OnTileDragEnded;
+                tileRowList.Add(input);
             }
+            tileReferences.Add(tileRowList);
         }
     }
 
     private void OnTileClicked(TileInput tile)
     {
-        Debug.Log($"Clicked {tile.Row}, {tile.Col}");
-        // cycle empty -> mark
+        // Debug.Log($"Clicked {tile.Row}, {tile.Col}");
+        if (tile.isLocked) return;
         tile.ToggleCross();
     }
 
     private void OnTileDoubleClicked(TileInput tile)
     {
-        Debug.Log($"Double-clicked {tile.Row}, {tile.Col}");
-        // TODO: place cat
+        // Debug.Log($"Double-clicked {tile.Row}, {tile.Col}");
+        if (tile.isLocked) return;
         tile.SetDisplayFlag();
     }
 
     private void OnTileDragEntered(TileInput tile)
     {
-        Debug.Log($"Drag over {tile.Row}, {tile.Col}");
-        // TODO: mark this tile
-        tile.ToggleCross();
+        if (tile.isLocked) return;
+        // Debug.Log($"Drag over {tile.Row}, {tile.Col}");
+        if (tile.GetTileStatus() == TileInput.TileStatus.Flagged)
+        {
+            return;
+        }
+        
+        if (dragStatus == DragStatus.NotDragging)
+        {
+            // set drag status to what we just changed the icon to 
+            bool isCrossed = tile.IsCurrentlyCrossed();
+            
+            if (isCrossed)
+            {
+                dragStatus = DragStatus.DragErase;
+            }
+            else
+            {
+                dragStatus = DragStatus.DragCross;
+            }
+            tile.ToggleCross();
+        }
+        else if (dragStatus == DragStatus.DragCross)
+        {
+            tile.SetCross();
+        }
+        else if (dragStatus == DragStatus.DragErase)
+        {
+            tile.SetEmpty();
+        }
+    }
+
+    private void OnTileDragEnded(TileInput tile)
+    {
+        if (tile.isLocked) return;
+        dragStatus = DragStatus.NotDragging;
     }
 }
