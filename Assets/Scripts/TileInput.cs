@@ -90,11 +90,11 @@ public class TileInput : MonoBehaviour, IPointerClickHandler, IPointerEnterHandl
 
         if (isCrossed)
         {
-            SetDisplayCross();
+            SetCross();
         }
         else
         {
-            SetDisplayEmpty();
+            SetEmpty();
         }
     }
 
