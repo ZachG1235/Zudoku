@@ -111,7 +111,15 @@ public class SolutionGenerator : MonoBehaviour
             colorRegions.Add(row);
         }
 
+        RunPostGenerationOperations();
+    }
+    
+    private void RunPostGenerationOperations()
+    {
         GenerateGUI();
+        
+        GameplayTimer.Main.ResetTimer();
+        GameplayTimer.Main.ResumeTimer();
     }
 
     private void GenerateGUI()
