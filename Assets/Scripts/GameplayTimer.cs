@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 
 public class GameplayTimer : MonoBehaviour
@@ -6,7 +7,10 @@ public class GameplayTimer : MonoBehaviour
 
     public float timeElapsed;
 
-    bool timerRunning;
+    private TMP_Text displayText;
+    private bool timerRunning;
+    private int lastDisplayedTime = -1;
+    private int wholeTimeElapsed;
 
 
     void Awake()
@@ -16,8 +20,9 @@ public class GameplayTimer : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-
         Main = this;
+
+        displayText = GetComponent<TMP_Text>();
     }
 
     void Start()
@@ -31,10 +36,21 @@ public class GameplayTimer : MonoBehaviour
         if (timerRunning)
         {
             timeElapsed += Time.deltaTime;
-        } 
+            wholeTimeElapsed = (int)timeElapsed;
+            if (wholeTimeElapsed != lastDisplayedTime)
+            {
+                UpdateTimer();
+            }
+        }
     }
 
-
+    private void UpdateTimer()
+    {
+        lastDisplayedTime = wholeTimeElapsed;
+        int seconds = wholeTimeElapsed % 60;
+        int minutes = (int)(wholeTimeElapsed / 60);
+        displayText.SetText("{0}:{1}", minutes, seconds);
+    }
 
     public void StopTimer()
     {
