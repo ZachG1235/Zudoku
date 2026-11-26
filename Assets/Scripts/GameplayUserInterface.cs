@@ -20,8 +20,7 @@ public class GameplayUserInterface : MonoBehaviour
                 {
                     if (currentTile.Marked)
                     {
-                        currentTile.SetImageColor(Color.green);
-                        currentTile.isLocked = true;
+                        currentTile.TileCheckedAndAccepted();
                     }
                     else
                     {

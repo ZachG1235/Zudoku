@@ -49,7 +49,7 @@ public class GameplayTimer : MonoBehaviour
         lastDisplayedTime = wholeTimeElapsed;
         int seconds = wholeTimeElapsed % 60;
         int minutes = (int)(wholeTimeElapsed / 60);
-        displayText.SetText("{0}:{1}", minutes, seconds);
+        displayText.SetText("{0:00}:{1:00}", minutes, seconds);
     }
 
     public void StopTimer()

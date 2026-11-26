@@ -152,6 +152,15 @@ public class SolutionGenerator : MonoBehaviour
     {
         // Debug.Log($"Clicked {tile.Row}, {tile.Col}");
         if (tile.isLocked) return;
+
+        if (tile.GetTileStatus() == TileInput.TileStatus.Flagged)
+        {
+            if (!GameplayTracker.Main.TryChangeMarks(-1))
+            {
+                return;
+            }
+        }
+
         tile.ToggleCross();
     }
 
@@ -159,7 +168,22 @@ public class SolutionGenerator : MonoBehaviour
     {
         // Debug.Log($"Double-clicked {tile.Row}, {tile.Col}");
         if (tile.isLocked) return;
-        tile.SetDisplayFlag();
+
+        int tilesToChange;
+        if (tile.GetTileStatus() != TileInput.TileStatus.Flagged)
+        {
+            tilesToChange = 1;
+        }
+        else
+        {
+            tilesToChange = -1;
+        }
+
+        if (GameplayTracker.Main.TryChangeMarks(tilesToChange))
+        {
+            tile.SetDisplayFlag();
+            GameplayTracker.Main.TryCheckForWin();
+        }
     }
 
     private void OnTileDragEntered(TileInput tile)

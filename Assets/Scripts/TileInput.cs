@@ -1,4 +1,5 @@
 using System;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -128,6 +129,13 @@ public class TileInput : MonoBehaviour, IPointerClickHandler, IPointerEnterHandl
         tempColor.a = tileIcon.color.a;
         tileIcon.color = tempColor;
     }
+
+    public void TileCheckedAndAccepted()
+    {
+        SetImageColor(Color.green);
+        isLocked = true;
+    }
+
 
     public void OnPointerClick(PointerEventData eventData)
     {
